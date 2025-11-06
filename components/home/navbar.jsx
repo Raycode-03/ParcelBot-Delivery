@@ -1,0 +1,146 @@
+  "use client";
+  import Image from "next/image";
+  import { useState, useEffect, useRef } from "react";
+  import { Menu, X } from "lucide-react";
+
+  export default function Navbar({openModal}) {
+    const [scrolled, setScrolled] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const menuRef = useRef(null);
+
+    // Detect scroll
+    useEffect(() => {
+      const handleScroll = () => setScrolled(window.scrollY > 10);
+      window.addEventListener("scroll", handleScroll);
+      return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
+    // ✅ Close menu when clicking outside
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (
+          menuRef.current &&
+          !menuRef.current.contains(event.target)
+        ) {
+          setMenuOpen(false);
+        }
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+     const handleSignup = () => {
+    openModal?.("signup");
+    setMenuOpen(false);
+  };
+
+  const handleLogin = () => {
+    openModal?.("login");
+    setMenuOpen(false);
+  };
+
+    return (
+      <nav
+        
+        className={`fixed top-0 left-0 px-6 sm:px-10 md:px-20 z-20 w-full h-20 flex justify-between items-center transition-all duration-300 ${
+          scrolled
+            ? "bg-green-900/90 backdrop-blur-md text-white shadow-lg"
+            : "text-white"
+        }`}
+      >
+        {/* Logo */}
+        <div className="flex items-center space-x-3">
+          <Image
+            src="/Parcellogo.png"
+            alt="Parcel Logo"
+            width={160}
+            height={160}
+            className="object-contain w-28 sm:w-36 md:w-40"
+          />
+        </div>
+
+        {/* Desktop Menu */}
+        <ul className="hidden md:flex items-center gap-6 text-sm font-medium lg:text-base">
+          <li>
+            <a
+              href="#home"
+              className="hover:text-gray-300 transition-colors duration-200"
+            >
+              Track Order
+            </a>
+          </li>
+
+          <li className="relative group">
+            <button
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white px-5 py-2 rounded-full transition-all duration-200 shadow-lg"
+            >
+              Get Started
+              <Image
+                src="/logos/arrows.png"
+                alt="arrow icon"
+                width={18}
+                height={18}
+                className="transition-transform duration-200 group-hover:rotate-180"
+              />
+            </button>
+
+            {/* Dropdown */}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform group-hover:translate-y-0 translate-y-2 z-50">
+              <div className="py-2">
+                <button
+                  onClick={handleSignup}
+                  className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-center"
+                >
+                  Sign up
+                </button>
+                <button
+                  onClick={handleLogin}
+                  className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-center"
+                >
+                  Login
+                </button>
+              </div>
+            </div>
+          </li>
+
+        </ul>
+
+        {/* Mobile Menu Icon */}
+        <button
+          onClick={() => setMenuOpen((prev) => !prev)}
+          className="md:hidden text-white focus:outline-none"
+        >
+          {menuOpen ? <X size={28} /> : <Menu size={28} />}
+        </button>
+
+        {/* Mobile Menu */}
+        {menuOpen && (
+         <div
+  ref={menuRef}
+  className="absolute top-full right-4 mt-2 w-48 sm:w-56 bg-white rounded-lg shadow-lg border border-gray-200 md:hidden transition-all duration-200 z-50" >
+    <div className="py-2">
+      <a
+        href="#home"
+        className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-center"
+        onClick={() => setMenuOpen(false)}
+      >
+        Track Order
+      </a>
+      <button
+        onClick={handleSignup}
+        className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-center"
+      >
+        Sign up
+      </button>
+      <button
+        onClick={handleLogin}
+        className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-center"
+      >
+        Login
+      </button>
+    </div>
+</div>
+        )}
+      </nav>
+    );
+  }
