@@ -15,24 +15,17 @@ const SignInBtn = ({
     
     <Button
       variant={variant}
-      className="w-full p-4"
+      className="w-full p-4 text-[12px] sm:text-sm"
       onClick={() => {
         setLoading(true);
-        signIn(provider, { callbackUrl: "/homepage" })
+        signIn(provider, { callbackUrl: "/" })
           .finally(() => setLoading(false));
       }}
       disabled={loading}
     >
  {loading && (
-          <div className="mr-2">
-            {/* You can add a small spinner here too */}
-            <Image
-              src="/video/spinAnimation.gif"
-              alt="loading"
-              width={16}
-              height={16}
-              className="inline-block"
-            />
+          <div className="mr-2 animate-spin">
+           
           </div>
         )}
       <Image

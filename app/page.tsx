@@ -1,18 +1,27 @@
 'use client'
 import { useRouter, useSearchParams } from 'next/navigation';
 import React from 'react'
-import { useRef  , useEffect} from 'react';
+import { useRef , useState , useEffect} from 'react';
 import Navbar from '@/components/home/navbar';
 import Image from 'next/image';
 import Link from 'next/link';
-import Dropdown from '@/components/home/dropdown';
+import DeliveryTypeDropdown from '@/components/home/dropdown';
 import LoginForm from '@/components/auth/LoginForm'
 import SignupForm from '@/components/auth/SignupForm'
+import { useUser } from '@/utils/UserProvider';
+import  { toast }from 'sonner'
 function Page() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const modal = searchParams.get('modal');
-  const modalRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);  
+  const [deliveryType, setDeliveryType] = useState("");
+  const [pickup, setPickup] = useState("");
+  const [destination, setDestination] = useState("");
+
+  // ✅ Add user state
+  const { user } = useUser();
+
   const openModal = (type: string) => {
     const params = new URLSearchParams(searchParams);
     params.set('modal', type);
@@ -39,8 +48,22 @@ function Page() {
         document.removeEventListener("mousedown", handleClickOutside);
       };
     }, [modal]); // ✅ Re-run when modal changes
+     const handledelivary = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-  
+    if (!user) {
+      // no logged-in user, redirect to login modal on home page
+      router.push("/?modal=login");
+      return;
+    }
+    if (!deliveryType || !pickup || !destination) {
+      toast.error("Please fill in all required fields: delivery type, pick-up, and destination.");
+      return;
+    }
+    // else, carry data to dashboard or next page
+    router.push(`/delivery?deliveryType=${deliveryType}&pickup=${pickup}&destination=${destination}`);
+  };
+
   return (
     <>
   <main className="relative w-full min-h-screen">
@@ -56,7 +79,7 @@ function Page() {
       </div>
       
       {/* Navbar */}
-      <Navbar openModal={openModal}/>
+      <Navbar openModal={openModal} user={user} />
 
       {/* Centered Content */}
       <section className="relative flex flex-col items-center justify-center min-h-screen text-center px-4 py-20 md:mt-10 mt-20">
@@ -64,12 +87,12 @@ function Page() {
           Reliable logistics for your E-commerce business
         </h1>
 
-        <form className="bg-white backdrop-blur-md p-8 rounded-2xl shadow-lg w-full max-w-xs md:max-w-sm text-white border-4 border-gray-500/50 mb-60">
+        <form className="bg-white backdrop-blur-md p-8 rounded-2xl shadow-lg w-full max-w-xs md:max-w-sm text-white border-4 border-gray-500/50 mb-60"  onSubmit={handledelivary}>
           <h2 className="text-2xl font-semibold text-center mb-6 text-black">Estimate your goods</h2>
 
           <div className="space-y-4">
             {/* dropdown input field */}
-            <Dropdown/>
+            <DeliveryTypeDropdown value={deliveryType} onChange={setDeliveryType}/>
 
             <div className="relative text-black">
               <label className="block text-sm font-medium mb-2 text-left">From</label>
@@ -77,6 +100,8 @@ function Page() {
                 type="text"
                 placeholder="Pick-up Location"
                 className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                value={pickup}
+                onChange={(e) => setPickup(e.target.value)}
               />
               
           <div className="absolute right-3 top-9 bg-green-300/30 p-2 rounded-full flex items-center justify-center">
@@ -96,6 +121,8 @@ function Page() {
                 type="text" 
                 placeholder="Destination" 
                 className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-400"
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
               />
             </div>
             
@@ -118,7 +145,7 @@ function Page() {
         Elevate your business with Parcelbot&apos;s end-to-end logistics solutions, seamlessly connecting customers with our dedicated riders for secure deliveries. Experience convenience at every step - request pickups, drop-offs, and delivery services with our efficient and reliable providers.
       </p>
       <button className="w-full sm:w-auto px-6 py-3 bg-green-600 hover:bg-green-500 rounded-full font-semibold text-white text-base shadow-lg hover:shadow-xl">
-        <Link href={'/'}>Get Started</Link>
+        <Link href={'/?modal=signup'}>Get Started</Link>
       </button>
     </article>
     
@@ -335,8 +362,8 @@ function Page() {
 {/* ✅ Conditional Modal Rendering */}
         {modal === 'signup' && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-[90%] max-w-md relative"  ref={modalRef}>
-              <SignupForm />
+            <div className="bg-white p-6 rounded-lg shadow-lg w-[79%] max-w-md relative"  ref={modalRef}>
+              <SignupForm  closeModal={closeModal} />
               
             </div>
           </div>
@@ -344,15 +371,14 @@ function Page() {
 
         {modal === 'login' && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"  >
-            <div className="bg-white p-6 rounded-lg shadow-lg w-[90%] max-w-md relative"  ref={modalRef}>
-              <LoginForm />
+            <div className="bg-white p-6 rounded-lg shadow-lg w-[79%] max-w-md relative"  ref={modalRef}>
+              <LoginForm  closeModal={closeModal} />
               
             </div>
           </div>
         )}
     </main>
 </>
-
   )
 }
 

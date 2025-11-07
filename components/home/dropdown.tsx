@@ -1,9 +1,14 @@
-'use client'
+'use client';
 import { useState } from "react";
 import { Box, TruckIcon, FileText, Utensils } from "lucide-react";
 
-export default function DeliveryTypeDropdown() {
-  const [selected, setSelected] = useState("Select delivery type");
+export default function DeliveryTypeDropdown({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+}) {
   const [open, setOpen] = useState(false);
 
   const options = [
@@ -20,7 +25,7 @@ export default function DeliveryTypeDropdown() {
         onClick={() => setOpen(!open)}
         className="w-full flex justify-between items-center px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
       >
-        <span>{selected}</span>
+        <span>{value || "Select delivery type"}</span>
         <svg
           className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`}
           xmlns="http://www.w3.org/2000/svg"
@@ -38,7 +43,7 @@ export default function DeliveryTypeDropdown() {
             <li
               key={opt.label}
               onClick={() => {
-                setSelected(opt.label);
+                onChange(opt.label); // <-- Send selected value to parent
                 setOpen(false);
               }}
               className="flex items-center gap-3 px-4 py-2 hover:bg-green-100 cursor-pointer"

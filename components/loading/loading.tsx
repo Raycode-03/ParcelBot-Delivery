@@ -8,14 +8,8 @@ export default function IsLoading({ loadstate }: { loadstate: boolean }) {
         <>
             {loading && (
                 <div className="loading-overlay">
-                    <div className="loading-container">
-                        <Image 
-                            src="/video/spinAnimation.gif" 
-                            height={80} 
-                            width={80} 
-                            alt="loading animation"
-                            unoptimized={true}
-                        />
+                    <div className="mr-2 animate-spin">
+           
                     </div>
                 </div>
             )}
