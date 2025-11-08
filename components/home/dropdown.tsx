@@ -1,5 +1,5 @@
 'use client';
-import { useState } from "react";
+import { useState  ,useRef , useEffect} from "react";
 import { Box, TruckIcon, FileText, Utensils } from "lucide-react";
 
 export default function DeliveryTypeDropdown({
@@ -10,16 +10,26 @@ export default function DeliveryTypeDropdown({
   onChange: (val: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-
+  const menuRef = useRef<HTMLDivElement>(null);
   const options = [
     { label: "Bulky Goods", icon: <TruckIcon className="w-5 h-5" /> },
     { label: "Small Parcel", icon: <Box className="w-5 h-5" /> },
     { label: "Documents", icon: <FileText className="w-5 h-5" /> },
     { label: "Food", icon: <Utensils className="w-5 h-5" /> },
   ];
+ // ✅ Close menu when clicking outside
+    useEffect(() => {
+       const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setOpen(false);
+            }
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
   return (
-    <div className="relative w-full text-black">
+    <div className="relative w-full text-black" ref={menuRef}>
       <button
         type="button"
         onClick={() => setOpen(!open)}
