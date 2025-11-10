@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 
 export async function POST() {
-    const response = NextResponse.json({ 
+    try {
+        const response = NextResponse.json({ 
         success: true,
         message: "Logged out successfully"
     });
@@ -11,4 +12,10 @@ export async function POST() {
     response.cookies.delete('refresh_token');
     
     return response;
+    }catch (error:any) {
+        const isDbError = error.message?.includes('MongoNetworkError') || error.message?.includes('ENOTFOUND');
+        console.error("Error logging out user:", error);
+        return NextResponse.json({ error: isDbError ? "Network unavailable" : "Internal server error" }, { status: 500 });
+    }
+    
 }

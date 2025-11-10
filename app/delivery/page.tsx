@@ -5,12 +5,17 @@
   import ReceiverInfoForm from "@/components/delivary/ReceiverInfoForm";
   import MapView from "@/components/delivary/MapView";
   import { useSearchParams } from "next/navigation";
-  import { toast } from "sonner"
   import { DeliveryFormData } from "@/types/deliverytypeform";
+  import { useUser } from '@/utils/UserProvider';
+  import { useRouter } from "next/navigation";
 
   export default function DeliveryPage() {
+    const router = useRouter();
+    const { user } = useUser();
     const [step, setStep] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
+      
+    
       // ✅ ADD THIS STATE
     const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null);
     const [formData, setFormData] = useState<DeliveryFormData>({
@@ -37,7 +42,7 @@
       }));
       
       setIsLoading(false);
-    }, [searchParams]);
+    }, [searchParams]); 
 
     const nextStep = () => setStep((prev) => prev + 1);
     const prevStep = () => setStep((prev) => prev - 1);
@@ -49,7 +54,18 @@
       const triggerMapUpdate = () => {
       setMapUpdateTrigger(prev => prev + 1);
     };
-    if (isLoading) return <div>Loading...</div>;
+     useEffect(() => {
+        if (!user) {
+            router.push('/?modal=login');
+            }
+        }, [user, router]);
+
+        // If no user, show loading or null while redirecting
+        if (!user) {
+            return <div>Redirecting to login...</div>; // or a loading spinner
+        }
+
+    if (isLoading) return null;
     console.log(formData, "formdata")
     return (
   <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">

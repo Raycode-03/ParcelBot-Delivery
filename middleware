@@ -1,34 +1,24 @@
-import { NextRequest, NextResponse } from "next/server";
-import jwt from 'jsonwebtoken';
+import { NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 
-const JWT_SECRET = process.env.JWT_SECRET!;
-
-export async function middleware(req: NextRequest) {
-  console.log('🛡️ Middleware running for:', req.nextUrl.pathname);
+export function middleware(request: NextRequest) {
+  // Check if user is authenticated
+  const token = request.cookies.get('access_token') 
   
-  const accessToken = req.cookies.get('access_token')?.value;
-  console.log('🔐 Access token found:', !!accessToken);
-  
-  if (!accessToken) {
-    console.log('❌ No access token, redirecting to login');
-    return NextResponse.redirect(new URL("/?modal=login", req.url));
+  // If not authenticated and trying to access protected routes
+  if (!token && (
+    request.nextUrl.pathname.startsWith('/delivery') || 
+    request.nextUrl.pathname.startsWith('/orders')
+  )) {
+    return NextResponse.redirect(new URL('/?modal=login', request.url))
   }
 
-  try {
-    const decoded = jwt.verify(accessToken, JWT_SECRET) as { userId: string };
-    console.log('✅ Token valid for user:', decoded.userId);
-    return NextResponse.next();
-  } catch (error) {
-    console.error('❌ Token verification failed:', error);
-    return NextResponse.redirect(new URL("/?modal=login", req.url));
-  }
+  return NextResponse.next()
 }
 
 export const config = {
   matcher: [
-    "/orders/:path*",
-    "/delivery/:path*",
-    "/orders",
-    "/delivery",
-  ],
-};
+    '/delivery/:path*',
+    '/orders/:path*'
+  ]
+}

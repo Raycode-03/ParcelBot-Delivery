@@ -1,55 +1,50 @@
 "use client";
-import React, { useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
+import React, { useState , useEffect} from "react";
+import Navbarorders from '@/components/order/navbarorders'
 
 import CompletedDelivery from "@/components/order/completeddelivery";
 import UpcomingDelivery from "@/components/order/upcomingdelivery";
 import Wallet from "@/components/order/wallet";
 import PendingDelivery from "@/components/order/pendingdelivery";
-
+import { useUser } from '@/utils/UserProvider';
+  import { useRouter } from "next/navigation";
 export default function OrdersPage() {
+  const router = useRouter();
+  const { user } = useUser();
   const [pendingAmount, setPendingAmount] = useState(0);
   const [upcomingAmount, setUpcomingAmount] = useState(0);
   const [completedAmount, setCompletedAmount] = useState(0);
   const [walletAmount, setWalletAmount] = useState(0);
   const [activeTab, setActiveTab] = useState("pending");
-
+    useEffect(() => {
+          if (!user) {
+              router.push('/?modal=login');
+              }
+          }, [user, router]);
+  
+          // If no user
+          if (!user) {
+              return null
+          }
+  
   const renderComponent = () => {
-    switch (activeTab) {
+     switch (activeTab) {
       case "pending":
-        return <PendingDelivery />;
+        return <PendingDelivery onOrdersCountChange={setPendingAmount} />;
       case "upcoming":
-        return <UpcomingDelivery />;
+        return <UpcomingDelivery onOrdersCountChange={setUpcomingAmount} />;
       case "completed":
-        return <CompletedDelivery />;
+        return <CompletedDelivery onOrdersCountChange={setCompletedAmount} />;
       case "wallet":
-        return <Wallet />;
+        return <Wallet onAmountChange={setWalletAmount} />;
       default:
-        return <PendingDelivery />;
+        return <PendingDelivery onOrdersCountChange={setPendingAmount} />;
     }
   };
 
   return (
     <div className="min-h-screen bg-white text-gray-800">
-      {/* NAVBAR */}
-      <nav className="flex items-center justify-between px-10 py-6 border-b">
-        <Image
-          src="/parclelogogreen.png"
-          alt="Parcelbot Logo"
-          width={140}
-          height={40}
-          className="object-contain"
-        />
-        <div className="flex gap-6 text-sm font-medium">
-          <Link href="/setting" className="hover:text-green-600">
-            Setting
-          </Link>
-          <Link href="/help" className="hover:text-green-600">
-            Help
-          </Link>
-        </div>
-      </nav>
+      <Navbarorders/>
 
       {/* MAIN LAYOUT */}
       <main className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-8 p-8">
@@ -100,7 +95,7 @@ export default function OrdersPage() {
             }`}
           >
             <p className="font-medium mb-2">Wallet</p>
-            <div className="text-2xl font-bold">{walletAmount}</div>
+            <div className="text-2xl font-bold text-white">₦{walletAmount.toLocaleString()}</div>
           </button>
         </section>
 

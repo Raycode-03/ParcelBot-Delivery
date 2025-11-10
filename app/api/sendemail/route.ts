@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import {sendmessage } from "@/components/message"
+import {sendmessage } from "@/components/auth/message"
 import validator from 'validator';
 export async function POST(req: Request) {
     try {
