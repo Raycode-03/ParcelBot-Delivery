@@ -1,9 +1,7 @@
 "use client";
-import React, { useEffect , useRef,  useState } from "react";
+import React, {   useState } from "react";
 import { toast } from "sonner";
 import Image from "next/image";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {Eye , EyeClosed} from 'lucide-react'
 import { DeliveryFormData } from "@/types/deliverytypeform";
 
@@ -16,7 +14,7 @@ interface SenderInfoProps {
 
 function SenderInfoForm({ data, setData, nextStep, prevStep }: SenderInfoProps) {
   const [loading, setLoading] = useState(false);
-
+  const [showPassword , setShowPassword]  = useState(false);
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -36,6 +34,16 @@ function SenderInfoForm({ data, setData, nextStep, prevStep }: SenderInfoProps) 
 
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border p-10 w-full max-w-lg">
+      {/* Logo */}
+            <div className="flex items-center mb-12">
+              <Image
+                src="/parclelogogreen.png"
+                alt="Parcel Logo"
+                width={140}
+                height={40}
+                className="object-contain"
+              />
+            </div>  
       {/* Full Name */}
       <label className="block text-sm mb-2">Full Name</label>
       <input
@@ -79,26 +87,48 @@ function SenderInfoForm({ data, setData, nextStep, prevStep }: SenderInfoProps) 
       />
 
       {/* Password */}
-      <label className="block text-sm mt-4 mb-2">Password</label>
+      <div className="relative mt-4">
+      <label className="block text-sm mb-2">Password</label>
+
       <input
-        type="password"
+        type={showPassword ? "text" : "password"}
         value={data.sender.password}
         onChange={(e) =>
-          setData((prev) => ({
+          setData((prev: any) => ({
             ...prev,
             sender: { ...prev.sender, password: e.target.value },
           }))
         }
-        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-1 focus:ring-green-500"
+        className="w-full px-4 py-3 pr-10 rounded-lg border border-gray-200 focus:ring-1 focus:ring-green-500"
       />
 
+      {/* Toggle Icon */}
       <button
-        type="submit"
-        disabled={loading}
-        className="mt-6 py-3.5 px-8 bg-green-600 hover:bg-green-700 text-white rounded-lg w-full"
+        type="button"
+        onClick={() => setShowPassword(!showPassword)}
+        className="absolute right-3 top-11 text-gray-500 hover:text-green-600"
       >
-        {loading ? "Saving..." : "Next"}
+        {showPassword ? <Eye size={18} /> : <EyeClosed size={18} />}
       </button>
+    </div>
+{/* Action Buttons */}
+        <div className="flex gap-3 pt-4">
+          <button
+            type="button"
+            onClick={prevStep}
+            className="flex-1 px-6 py-3 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+          >
+            Back
+          </button>
+         <button
+          type="submit"
+          disabled={loading}
+          className="flex-1 px-6 py-3 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? "Saving..." : "Next"}
+        </button>
+        </div>
+      
     </form>
   );
 }

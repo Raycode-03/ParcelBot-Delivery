@@ -3,32 +3,70 @@ import React, { useState } from "react";
 import { toast } from "sonner";
 import { Textarea } from "../ui/textarea";
 import { DeliveryFormData } from "@/types/deliverytypeform";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 interface ReceiverInfoProps {
   data: DeliveryFormData;
   setData: React.Dispatch<React.SetStateAction<DeliveryFormData>>;
   prevStep: () => void;
-  onSubmit: () => Promise<void>;
 }
 
-function ReceiverInfoForm({ data, setData, prevStep, onSubmit }: ReceiverInfoProps) {
+function ReceiverInfoForm({ data, setData, prevStep }: ReceiverInfoProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
-
+  console.log(data , "receivers")
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { fullname, phoneNumber, packageValue, packageDescription } = data.receiver;
     
+    // Client-side validation
     if (!fullname || !phoneNumber || !packageValue || !packageDescription) {
       toast.error("Please fill all receiver fields");
       return;
     }
-    
+
     setLoading(true);
-    await onSubmit();
-    setLoading(false);
+    
+    try {
+      const res = await fetch(`/api/orders/createorder`, {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data }), 
+      });
+
+      const data_received = await res.json();
+      
+      if (!data_received.ok) {
+        toast.error(data_received.error || "Failed to Create Order");
+        setLoading(false);
+        return;
+      }
+      
+      // Success!
+      toast.success(data_received.success || "Order created successfully!");
+      
+      // Redirect to orders page
+      router.push("/orders");
+      
+    } catch (error) {
+      console.error("Error creating order:", error);
+      toast.error("Network error. Please check your connection.");
+      setLoading(false);
+    }
   };
 
   return (
     <div className="w-full max-w-md mx-auto">
+      {/* Logo */}
+            <div className="flex items-center mb-12">
+              <Image
+                src="/parclelogogreen.png"
+                alt="Parcel Logo"
+                width={140}
+                height={40}
+                className="object-contain"
+              />
+            </div>
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Full Name */}
         <div>

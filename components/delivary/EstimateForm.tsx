@@ -10,10 +10,11 @@ interface Props {
   setData: React.Dispatch<React.SetStateAction<DeliveryFormData>>;
   nextStep: () => void;
   routeInfo: { distance: string; duration: string } | null;
+  onTriggerMapUpdate: () => void; // Add this
 }
 
-export default function EstimateForm({ data, setData, nextStep, routeInfo }: Props) {
-  const [deliverySpeed, setDeliverySpeed] = useState("premium");
+export default function EstimateForm({ data, setData, nextStep, routeInfo, onTriggerMapUpdate }: Props) {
+  const [deliverySpeed, setDeliverySpeed] = useState(data.deliverySpeed || "premium");
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -25,8 +26,28 @@ export default function EstimateForm({ data, setData, nextStep, routeInfo }: Pro
     { label: "Food", icon: <Utensils className="w-5 h-5" /> },
   ];
 
-  // Calculate prices based on duration
-// Simpler pricing calculation
+ // 1️⃣ Trigger map update after user finishes typing
+useEffect(() => {
+  if (!data.pickup || !data.destination) return;
+
+  const timeout = setTimeout(() => {
+    onTriggerMapUpdate();
+  }, 3000);
+
+  return () => clearTimeout(timeout);
+}, [data.pickup, data.destination]);
+
+// 2️⃣ Save route info (duration, distance) into form data
+useEffect(() => {
+  if (routeInfo?.duration) {
+    setData((prev) => ({
+      ...prev,
+      duration: routeInfo.duration,
+    }));
+  }
+}, [routeInfo]);
+
+// 3️⃣ Calculate prices based on duration & destination
 const calculatePrices = () => {
   if (!routeInfo?.duration) {
     return { premium: 3000, economy: 2000 };
@@ -35,32 +56,51 @@ const calculatePrices = () => {
   const durationText = routeInfo.duration.toLowerCase();
   let hours = 0;
 
-  // Extract hours - handle both "h/m" and "hour/min" formats
-  if (durationText.includes('h') && durationText.includes('m')) {
+  if (durationText.includes("h") && durationText.includes("m")) {
     const hoursMatch = durationText.match(/(\d+)\s*h/);
     const minsMatch = durationText.match(/(\d+)\s*m/);
-    hours = (hoursMatch ? parseInt(hoursMatch[1]) : 0) + (minsMatch ? parseInt(minsMatch[1]) / 60 : 0);
-  } else if (durationText.includes("hour") && durationText.includes("min")) {
-    const hoursMatch = durationText.match(/(\d+)\s*hour/);
-    const minsMatch = durationText.match(/(\d+)\s*min/);
-    hours = (hoursMatch ? parseInt(hoursMatch[1]) : 0) + (minsMatch ? parseInt(minsMatch[1]) / 60 : 0);
+    hours =
+      (hoursMatch ? parseInt(hoursMatch[1]) : 0) +
+      (minsMatch ? parseInt(minsMatch[1]) / 60 : 0);
   }
 
-  // Simple tier-based pricing
-  if (hours <= 4) {
-    return { premium: 3000, economy: 2000 };
-  } else if (hours <= 24) {
-    return { premium: 5000, economy: 3000 };
+  const isInternational =
+    data.destination.toLowerCase().includes("france") ||
+    data.destination.toLowerCase().includes("paris") ||
+    data.destination.toLowerCase().includes("europe") ||
+    hours > 24;
+
+  if (isInternational) {
+    if (hours <= 72) return { premium: 45000, economy: 25000 };
+    else return { premium: 35000, economy: 20000 };
   } else {
-    // For multi-day deliveries
-    const days = Math.ceil(hours / 24);
-    return { 
-      premium: 3000 + (2000 * days), 
-      economy: 2000 + (1000 * days) 
-    };
+    if (hours <= 4) return { premium: 3000, economy: 2000 };
+    else if (hours <= 24) return { premium: 5000, economy: 3000 };
+    else return { premium: 8000, economy: 5000 };
   }
 };
   const prices = calculatePrices();
+// 4️⃣ Update price automatically whenever route or speed changes
+useEffect(() => {
+  if (!routeInfo || !deliverySpeed) return;
+  const selectedPrice =
+    deliverySpeed === "premium" ? prices.premium : prices.economy;
+
+  setData((prev) => ({
+    ...prev,
+    price: selectedPrice,
+  }));
+}, [routeInfo, deliverySpeed]);
+
+// 5️⃣ Handle speed change cleanly — no manual price logic needed
+const handleDeliverySpeedChange = (speed: string) => {
+  setDeliverySpeed(speed);
+  setData((prev) => ({
+    ...prev,
+    deliverySpeed: speed,
+  }));
+};
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +108,7 @@ const calculatePrices = () => {
       toast.error("Please fill in all fields");
       return;
     }
+
     setLoading(true);
     setTimeout(() => {
       toast.success("Estimate calculated successfully!");
@@ -76,6 +117,33 @@ const calculatePrices = () => {
     }, 800);
   };
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Initialize price on component mount
+  useEffect(() => {
+    // Only set initial price if not already set
+    if (!data.price) {
+      const selectedPrice = deliverySpeed === "premium" ? prices.premium : prices.economy;
+      setData((prev) => ({
+        ...prev,
+        deliverySpeed: deliverySpeed,
+        price: selectedPrice
+      }));
+    }
+  }, []); // Empty dependency array - only run once on mount
+
+  const formatCurrency = (amount: number) => {
+    return `NGN ${amount.toLocaleString()}`;
+  };
   // ✅ Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -87,10 +155,6 @@ const calculatePrices = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return `NGN ${amount.toLocaleString()}`;
-  };
 
   return (
     <form
@@ -221,6 +285,7 @@ const calculatePrices = () => {
             onChange={(e) =>
               setData((prev) => ({ ...prev, destination: e.target.value }))
             }
+           
             placeholder=""
             className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-1 focus:ring-green-500 focus:border-green-500 outline-none text-sm"
           />
@@ -236,6 +301,7 @@ const calculatePrices = () => {
               value="premium"
               checked={deliverySpeed === "premium"}
               onChange={() => setDeliverySpeed("premium")}
+              
               className="w-4 h-4 text-green-600 focus:ring-green-500"
             />
             <p className="font-normal text-gray-900 text-sm">Premium</p>
@@ -314,9 +380,11 @@ const calculatePrices = () => {
         <button
           type="submit"
           disabled={loading || !routeInfo}
+          
           className="py-3.5 px-8 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors text-sm disabled:opacity-50"
           >
-          {loading ? "Loading..." : !routeInfo ? "Calculating price..." : "Request now"}
+          {loading ? "Loading..." : !routeInfo ? "Calculating price..." : "Request now"} 
+
         </button>
 
         {/* Terms */}

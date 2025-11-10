@@ -2,6 +2,8 @@ export type DeliveryFormData = {
   deliveryType: string;
   pickup: string;
   destination: string;
+  price?:number;
+  deliverySpeed:string;
   sender: {
     fullname: string;
     phoneNumber: string;
