@@ -20,8 +20,7 @@ function Contact() {
     setMessage("");
     setsendloading(true);
     try {
-      const baseurl=process.env.NEXTAUTH_URL || "";
-        const res = await fetch(`${baseurl}/api/sendemail`, {
+        const res = await fetch(`/api/sendemail`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

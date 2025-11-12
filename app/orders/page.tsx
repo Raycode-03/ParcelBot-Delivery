@@ -1,34 +1,90 @@
 "use client";
-import React, { useState , useEffect} from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import Navbarorders from '@/components/order/navbarorders'
-
 import CompletedDelivery from "@/components/order/completeddelivery";
 import UpcomingDelivery from "@/components/order/upcomingdelivery";
 import Wallet from "@/components/order/wallet";
 import PendingDelivery from "@/components/order/pendingdelivery";
 import { useUser } from '@/utils/UserProvider';
-  import { useRouter } from "next/navigation";
+
 export default function OrdersPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useUser();
+  
   const [pendingAmount, setPendingAmount] = useState(0);
   const [upcomingAmount, setUpcomingAmount] = useState(0);
   const [completedAmount, setCompletedAmount] = useState(0);
   const [walletAmount, setWalletAmount] = useState(0);
   const [activeTab, setActiveTab] = useState("pending");
-    useEffect(() => {
-          if (!user) {
-              router.push('/?modal=login');
-              }
-          }, [user, router]);
-  
-          // If no user
-          if (!user) {
-              return null
-          }
-  
+  const [verifyingPayment, setVerifyingPayment] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/?modal=login');
+      return;
+    }
+
+    // Check for tab parameter in URL
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'wallet') {
+      setActiveTab('wallet');
+    }
+
+    // Check for payment verification (Paystack callback)
+    const trxref = searchParams.get('trxref');
+    const reference = searchParams.get('reference');
+    
+    if (reference || trxref) {
+      const paymentRef = reference || trxref;
+      if (paymentRef) {
+        setActiveTab('wallet');
+        verifyPayment(paymentRef);
+      }
+    }
+  }, [user, searchParams, router]);
+
+  const verifyPayment = async (reference: string) => {
+    setVerifyingPayment(true);
+    try {
+      const response = await fetch(`/api/wallet/verify?reference=${reference}`);
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast.success(data.message || 'Wallet topped up successfully!');
+        setWalletAmount(data.transaction.newBalance);
+        // Clean up URL
+        router.replace('/orders?tab=wallet');
+      } else {
+        toast.error(data.error || 'Payment verification failed');
+        router.replace('/orders?tab=wallet');
+      }
+    } catch (error) {
+      console.error('Error verifying payment:', error);
+      toast.error('Error verifying payment');
+      router.replace('/orders?tab=wallet');
+    } finally {
+      setVerifyingPayment(false);
+    }
+  };
+
+  if (!user) {
+    return null;
+  }
+
   const renderComponent = () => {
-     switch (activeTab) {
+    if (verifyingPayment) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
+          <p className="text-gray-600">Verifying payment...</p>
+        </div>
+      );
+    }
+
+    switch (activeTab) {
       case "pending":
         return <PendingDelivery onOrdersCountChange={setPendingAmount} />;
       case "upcoming":
@@ -44,7 +100,7 @@ export default function OrdersPage() {
 
   return (
     <div className="min-h-screen bg-white text-gray-800">
-      <Navbarorders/>
+      <Navbarorders />
 
       {/* MAIN LAYOUT */}
       <main className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-8 p-8">
@@ -95,7 +151,9 @@ export default function OrdersPage() {
             }`}
           >
             <p className="font-medium mb-2">Wallet</p>
-            <div className="text-2xl font-bold text-white">₦{walletAmount.toLocaleString()}</div>
+            <div className={`text-2xl font-bold ${activeTab === "wallet" ? "text-white" : "text-gray-800"}`}>
+              ₦{walletAmount.toLocaleString()}
+            </div>
           </button>
         </section>
 

@@ -59,8 +59,7 @@ export function CardDemo({ data }: { data: "login" | "register" }) {
     setLoading(true);
 
     try {
-      const baseUrl = process.env.NEXTAUTH_URL||'http://localhost:3000' ;
-      const res = await fetch(`${baseUrl}/api/auth/user_auth/${cfg.endpoint}`, {
+      const res = await fetch(`/api/auth/user_auth/${cfg.endpoint}`, {
         method: "POST",
         headers: { "Content-type": "application/json" },
         body: JSON.stringify({ email, password }),
