@@ -1,11 +1,25 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useState , useEffect} from 'react'
 import { Send } from 'lucide-react'
 import Navbarorders from '@/components/order/navbarorders'
+import { toast } from 'sonner';
+import { useUser } from '@/utils/UserProvider';
+import { useRouter } from 'next/navigation';
 function HelpPage() {
+  const { user } = useUser();
+  const router = useRouter();
   const [message, setMessage] = useState('');
   const [selectedQuestion, setSelectedQuestion] = useState(0);
-
+  useEffect(() => {
+     if (!user) {
+      router.push('/?modal=login');
+        }
+    }, [user, router]);
+    
+            // If no user
+    if (!user) {
+       return null
+    }
   const faqs = [
     { 
       id: 1, 
@@ -39,48 +53,71 @@ function HelpPage() {
     }
   ];
 
-  const handleSubmit = () => {
-    console.log('Message submitted:', message);
-    setMessage('');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); 
+
+    try {
+      const res = await fetch("/api/help", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || "Something went wrong");
+      }
+
+      toast.success("✅ Message sent successfully:", data);
+    } catch (error) {
+      console.error("❌ Error submitting message:", error);
+      toast.error( "❌ Error submitting message:" )
+    }
+
+    setMessage("");
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white-50">
       {/* Navbar */}
       <Navbarorders/>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-10">
-  {/* LEFT COLUMN - Message Box */}
-  <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-8 h-fit">
-    <h2 className="text-xl font-medium text-gray-900 mb-6">
-      Hi there, how can we help you?
-    </h2>
-    <div>
-      <textarea
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        placeholder="Type a message..."
-        rows={5}
-        className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none mb-4"
-      />
-      <div className="flex justify-start">
-        <button
-          onClick={handleSubmit}
-          className="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2.5 rounded-lg transition-colors flex items-center gap-2"
-        >
-          <Send className="w-4 h-4" />
-          Submit message
-        </button>
+      <div className="w-1xl px-6 py-12  gap-10">
+        {/* LEFT COLUMN - Message Box */}
+        <div className="w-[50%]">
+          <h2 className="text-2xl font-meduim text-gray-900 mb-1">
+            Hi there, how can we help you?
+          </h2>
+          <form onSubmit={handleSubmit}>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Type a message..."
+              rows={9}
+              className="w-full px-4 py-4 border border-gray-200 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent resize-none mb-4 bg-gray-100"
+            />
+            <div className="flex justify-end">
+              <button
+                type='submit'
+                className="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2.5 rounded-md transition-colors flex  items-center gap-2"
+              >
+                <Send className="w-4 h-4" />
+                Submit message
+              </button>
+            </div>
+          </form>
+        </div>  
       </div>
-    </div>
-  </div>
-
-  {/* RIGHT COLUMN - FAQ Section */}
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+ {/* RIGHT COLUMN - FAQ Section */}
+  <div className='px-4 py-14'>
+    <div className=" grid grid-cols-1 md:grid-cols-2 w-1xl px-30 py-12  gap-10 bg-white rounded-xl shadow-sm border border-gray-100 p-8 h-fit">
     {/* Questions Column */}
     <div>
-      <h3 className="text-xl font-semibold text-gray-900 mb-6">
+      <h3 className="text-3xl font-bold text-gray-900 mb-6">
         Frequently asked questions.
       </h3>
       <div className="space-y-2">
@@ -102,7 +139,7 @@ function HelpPage() {
 
     {/* Answer Column */}
     <div>
-      <h3 className="text-xl font-semibold text-gray-900 mb-6">Answer.</h3>
+      <h3 className="text-3xl font-bold text-gray-900 mb-6">Answer.</h3>
       <div className="bg-green-600 rounded-lg p-8 text-white">
         <p className="text-sm leading-relaxed">
           {faqs[selectedQuestion].answer}
@@ -110,8 +147,7 @@ function HelpPage() {
       </div>
     </div>
   </div>
-</div>
-
+  </div>
     </div>
   )
 }

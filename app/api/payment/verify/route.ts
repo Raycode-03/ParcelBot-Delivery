@@ -37,7 +37,7 @@ export async function GET(req: Request) {
       { 
         $set: { 
           paymentStatus: "completed",
-          status: "paid",
+          status: "completed",
           paidAt: new Date()
         } 
       }

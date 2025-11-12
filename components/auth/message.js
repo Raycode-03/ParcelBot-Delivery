@@ -91,3 +91,12 @@ export async function sendcode(email, code) {
     console.error('Failed to send email:', error);
   }
 }
+
+export async function sendquestion(email , message , createdAt){
+   const mailOptions = {
+      from: `"Support Bot" <${process.env.ADMIN_EMAIL}>`,
+      to: process.env.ADMIN_EMAIL, // send to admin inbox
+      subject: "📬 New Help Message Received",
+      text: `You’ve received a new message (\n\n${message}\n\nSent on: ${createdAt}`,
+    };
+}

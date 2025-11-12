@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Menu, X, BellDot } from 'lucide-react';
 import { toast } from 'sonner';
-
+import Link from 'next/link';
 export default function Navbar({ openModal, user }) {
     const [scrolled, setScrolled] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -79,13 +79,15 @@ export default function Navbar({ openModal, user }) {
       >
         {/* Logo */}
         <div className="flex items-center space-x-3">
-          <Image
+          <Link href="/">
+            <Image
             src="/Parcellogo.png"
             alt="Parcel Logo"
             width={160}
             height={160}
             className="object-contain w-28 sm:w-36 md:w-40"
           />
+          </Link>
         </div>
 
         {/* Desktop Menu */}
@@ -120,7 +122,7 @@ export default function Navbar({ openModal, user }) {
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform group-hover:translate-y-0 translate-y-2 z-50">
                   <div className="py-2">
                     <a
-                      href="/dashboard"
+                      href="/orders"
                       className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 text-center"
                     >
                       Dashboard
@@ -140,7 +142,7 @@ export default function Navbar({ openModal, user }) {
             <>
               <li>
                 <a
-                  href="#home"
+                  href="/orders"
                   className="hover:text-gray-300 transition-colors duration-200"
                 >
                   Track Order
@@ -227,7 +229,7 @@ export default function Navbar({ openModal, user }) {
                 // Mobile menu for guest
                 <>
                   <a
-                    href="#home"
+                    href="/orders"
                     className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 text-center"
                     onClick={() => setMenuOpen(false)}
                   >

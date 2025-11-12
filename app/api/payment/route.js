@@ -53,7 +53,7 @@ export async function POST(req) {
         { status: 400 }
       );
     }
-    const paymentReference = `ORD_${orderNumber}_${Date.now()}`;
+    const paymentReference = `${orderNumber}}`;
 
     // ✅ Create Paystack transaction with callback URL
     const transaction = await paystack.transaction.initialize({
@@ -88,7 +88,6 @@ export async function POST(req) {
         $set: { 
           paymentReference: transaction.data.reference,
           paymentStatus: "initiated",
-          status: "processing delivery",
           paymentGateway: "paystack",
           updatedAt: new Date(),
         } 

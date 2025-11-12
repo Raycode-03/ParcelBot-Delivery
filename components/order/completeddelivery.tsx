@@ -130,7 +130,7 @@ function Completeddelivery({ onOrdersCountChange }: PendingDeliveryProps) {
       {/* Scrollable List */}
       <div className="flex-1 overflow-y-auto pr-1">
         {filteredOrders.length === 0 ? (
-          <p className="text-gray-500 text-sm">No upcoming orders found</p>
+          <p className="text-gray-500 text-sm">no completed deliveries found</p>
         ) : (
           <div className="space-y-4">
             {filteredOrders.map((order) => (
@@ -174,15 +174,12 @@ function Completeddelivery({ onOrdersCountChange }: PendingDeliveryProps) {
                       </span>
                     </div>
 
-                    <div className="relative group">
-                      <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                        ⋮
-                      </button>
-                      <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                        <button className="w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-t-lg transition-colors cursor-pointer active:scale-95">
+                    <div className="relative">
+                      
+                        <button className="px-6 py-3  text-black bg-gray-100 rounded-full transition-colors text-[13px] " >
                           Completed
                         </button>
-                      </div>
+                      
                     </div>
                   </div>
                 </div>

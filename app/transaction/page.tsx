@@ -3,9 +3,8 @@ import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Image from "next/image";
-import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-
+import Link from "next/link";
 interface TransactionData {
   reference: string;
   amount: number;
@@ -59,41 +58,114 @@ export default function TransactionReceipt() {
     }
   };
 
-  const handleSaveAsPDF = async () => {
-    if (!receiptRef.current) return;
-    
-    setGenerating(true);
-    
-    try {
-      // Generate canvas from HTML
-      const canvas = await html2canvas(receiptRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff'
-      });
-      
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-      
-      const imgWidth = 210; // A4 width in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-      pdf.save(`transaction-receipt-${transaction?.reference}.pdf`);
-      
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast.error('Failed to generate PDF. Please try again.');
-    } finally {
-      setGenerating(false);
-    }
-  };
+ const handleSaveAsPDF = async () => {
+  if (!transaction) return;
+  
+  setGenerating(true);
+  
+  try {
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
 
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const margin = 20;
+    const contentWidth = pageWidth - (2 * margin);
+    let yPosition = margin;
+
+    // Helper function to add text
+    const addText = (text: string, x: number, y: number, options: any = {}) => {
+      pdf.setFontSize(options.fontSize || 10);
+      pdf.setFont(options.font || 'helvetica', options.style || 'normal');
+      pdf.setTextColor(options.color || '#000000');
+      pdf.text(text, x, y, options);
+    };
+
+    // Add logo text (or you can add image if needed)
+    addText('Parcelbot', margin, yPosition, { fontSize: 18, style: 'bold', color: '#16a34a' });
+    yPosition += 15;
+
+    // Add title
+    addText('Transaction Receipt', pageWidth / 2, yPosition, { 
+      fontSize: 16, 
+      style: 'bold',
+      align: 'center'
+    });
+    yPosition += 15;
+
+    // Add border box
+    const boxY = yPosition;
+    pdf.setDrawColor(229, 231, 235); // gray-200
+    pdf.setLineWidth(0.5);
+    pdf.rect(margin, boxY, contentWidth, 150, 'S');
+
+    yPosition += 10;
+
+    // Helper function to add receipt row
+    const addRow = (label: string, value: string, isBold: boolean = false) => {
+      addText(label, margin + 5, yPosition, { 
+        fontSize: 10,
+        style: isBold ? 'bold' : 'normal',
+        color: isBold ? '#111827' : '#374151'
+      });
+      
+      const valueLines = pdf.splitTextToSize(value, contentWidth - 90);
+      addText(valueLines, pageWidth - margin - 5, yPosition, { 
+        fontSize: 10,
+        color: isBold ? '#111827' : '#6b7280',
+        align: 'right'
+      });
+      
+      yPosition += 8;
+    };
+
+    // Add all transaction details
+    addRow('Tracking ID', transaction.reference || 'N/A', true);
+    yPosition += 2;
+
+    addRow(
+      'Date of order:',
+      transaction.paidAt 
+        ? new Date(transaction.paidAt).toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+          })
+        : 'N/A'
+    );
+
+    addRow('Sender\'s name:', transaction.metadata?.senderName || 'N/A');
+    addRow('Phone number:', transaction.metadata?.senderPhone || 'N/A');
+    addRow('Receiver\'s name:', transaction.metadata?.receiverName || 'N/A');
+    addRow('Phone Number:', transaction.metadata?.receiverPhone || 'N/A');
+    addRow('Description:', transaction.metadata?.packageDescription || 'N/A');
+    addRow(
+      'Estimate:',
+      `NGN ${transaction.metadata?.price?.toLocaleString() || transaction.amount?.toLocaleString() || '0'}`
+    );
+
+    // Add footer
+    yPosition = pdf.internal.pageSize.getHeight() - 20;
+    addText(
+      'Thank you for using Parcelbot',
+      pageWidth / 2,
+      yPosition,
+      { fontSize: 9, color: '#6b7280', align: 'center' }
+    );
+
+    // Save the PDF
+    pdf.save(`transaction-receipt-${transaction.reference || 'receipt'}.pdf`);
+    toast.success('PDF downloaded successfully!');
+    
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    toast.error('Failed to generate PDF. Please try again.');
+  } finally {
+    setGenerating(false);
+  }
+};
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -110,6 +182,7 @@ export default function TransactionReceipt() {
       <div className="max-w-2xl mx-auto" ref={receiptRef}>
         {/* Logo */}
         <div className="mb-8">
+          <Link href={'/'}>
           <Image
             src="/parclelogogreen.png"
             alt="Parcelbot Logo"
@@ -117,6 +190,7 @@ export default function TransactionReceipt() {
             height={35}
             className="object-contain"
           />
+          </Link>
         </div>
 
         {/* Receipt Card */}
@@ -128,8 +202,8 @@ export default function TransactionReceipt() {
           <div className="space-y-5">
             {/* Tracking ID */}
             <div className="flex justify-between items-start py-1">
-              <span className="text-gray-900 text-sm font-semibold">Tracking ID</span>
-              <div className="flex-1 ml-4">
+              <span className="text-gray-900 text-ms font-bold">Tracking ID</span>
+              <div className="text-right">
                 <span className="font-semibold text-sm text-gray-900">
                   {transaction?.reference || 'N/A'}
                 </span>
@@ -139,7 +213,7 @@ export default function TransactionReceipt() {
             {/* Date of order */}
             <div className="flex justify-between items-start py-1">
               <span className="text-gray-700 text-sm font-medium">Date of order:</span>
-              <div className="flex-1 ml-4">
+              <div className="text-right">
                 <span className="text-sm text-gray-500">
                   {transaction?.paidAt 
                     ? new Date(transaction.paidAt).toLocaleDateString('en-GB', {
@@ -155,7 +229,7 @@ export default function TransactionReceipt() {
             {/* Sender's name */}
             <div className="flex justify-between items-start py-1">
               <span className="text-gray-700 text-sm font-medium">Sender&apos;s name:</span>
-              <div className="flex-1 ml-4">
+              <div className="text-right">
                 <span className="text-sm text-gray-500">
                   {transaction?.metadata?.senderName || 'N/A'}
                 </span>
@@ -165,7 +239,7 @@ export default function TransactionReceipt() {
             {/* Phone number */}
             <div className="flex justify-between items-start py-1">
               <span className="text-gray-700 text-sm font-medium">Phone number:</span>
-              <div className="flex-1 ml-4">
+              <div className="text-right">
                 <span className="text-sm text-gray-500">
                   {transaction?.metadata?.senderPhone || 'N/A'}
                 </span>
@@ -175,7 +249,7 @@ export default function TransactionReceipt() {
             {/* Receiver's name */}
             <div className="flex justify-between items-start py-1">
               <span className="text-gray-700 text-sm font-medium">Receiver&apos;s name:</span>
-              <div className="flex-1 ml-4">
+              <div className="text-right">
                 <span className="text-sm text-gray-500">
                   {transaction?.metadata?.receiverName || 'N/A'}
                 </span>
@@ -185,7 +259,7 @@ export default function TransactionReceipt() {
             {/* Phone Number */}
             <div className="flex justify-between items-start py-1">
               <span className="text-gray-700 text-sm font-medium">Phone Number:</span>
-              <div className="flex-1 ml-4">
+              <div className="text-right">
                 <span className="text-sm text-gray-500">
                   {transaction?.metadata?.receiverPhone || 'N/A'}
                 </span>
@@ -195,7 +269,7 @@ export default function TransactionReceipt() {
             {/* Description */}
             <div className="flex justify-between items-start py-1">
               <span className="text-gray-700 text-sm font-medium">Description:</span>
-              <div className="flex-1 ml-4">
+              <div className="text-right">
                 <span className="text-sm text-gray-500">
                   {transaction?.metadata?.packageDescription || 'N/A'}
                 </span>
@@ -205,7 +279,7 @@ export default function TransactionReceipt() {
             {/* Estimate */}
             <div className="flex justify-between items-start py-1">
               <span className="text-gray-700 text-sm font-medium">Estimate:</span>
-              <div className="flex-1 ml-4">
+              <div className="text-right">
                 <span className="text-sm text-gray-500">
                   NGN {transaction?.metadata?.price?.toLocaleString() || transaction?.amount?.toLocaleString() || '0'}
                 </span>
@@ -236,3 +310,4 @@ export default function TransactionReceipt() {
     </div>
   );
 }
+
