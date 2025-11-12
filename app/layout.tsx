@@ -12,7 +12,8 @@ export const metadata: Metadata = {
   title: "Parcelbot",
   description: "Welcome to Parcelbot...",
 };
-
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 export default async function RootLayout({
   children,
 }: Readonly<{
