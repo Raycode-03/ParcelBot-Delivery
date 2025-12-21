@@ -1,4 +1,33 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dispatch & Delivery Admin Dashboard
+
+An admin dashboard for managing delivery requests and tracking delivery routes.
+
+## Features
+- Multi-step delivery form
+- GEOAPIFY Maps integration:
+  - Distance calculation
+  - Estimated delivery duration
+- Live route preview
+- Delivery status tracking
+- Wallet overview:
+  - Pending deliveries
+  - Completed deliveries
+  - Wallet (paystack)
+- Admin profile management
+  - Update name, email, password
+  - Profile image upload (Cloudinary)
+
+## Tech Stack
+- Frontend: Next.js, TypeScript, Tailwind CSS
+- Backend: Node.js
+- Image Storage: Cloudinary
+- Maps: GEOAPIFYMaps API
+
+## Status
+🧪 Prototype / UI & logic testing  
+Not production-ready
+
 
 ## Getting Started
 
