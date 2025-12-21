@@ -28,6 +28,24 @@ An admin dashboard for managing delivery requests and tracking delivery routes.
 🧪 Prototype / UI & logic testing  
 Not production-ready
 
+## Environment Variables
+
+The following environment variables are required to run the application.
+For security reasons, actual values are not included.
+-AUTH_GOOGLE_ID
+-AUTH_GOOGLE_SECRET
+-MONGODB_URL=
+-EMAIL_ADMIN
+EMAIL_PASS
+-EMAIL_RAY
+-NEXTAUTH_URL
+-NEXTAUTH_SECRET
+-JWT_SECRET
+-NEXT_PUBLIC_GEOAPIFY_API_KEY
+-PAYSTACK_SECRET_KEY
+-CLOUDINARY_API_CLOUD_NAME
+-CLOUDINARY_API_KEY
+-CLOUDINARY_API_SECRET
 
 ## Getting Started
 
